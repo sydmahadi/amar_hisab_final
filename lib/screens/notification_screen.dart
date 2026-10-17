@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../services/app_settings.dart';
@@ -99,7 +98,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       if (!mounted) return;
       setState(() {
         _error = _bn
-            ? 'রিমাইন্ডারের তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।'
+            ? 'রিমাইন্ডারের তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।'
             : 'Could not load reminders. Please try again.';
       });
     } finally {
@@ -119,102 +118,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
       if (!mounted) return;
       _message(
         _bn
-            ? '$countটি রিমাইন্ডার শিডিউল করা হয়েছে।'
+            ? '$countটি রিমাইন্ডার শিডিউল করা হয়েছে।'
             : '$count reminder(s) scheduled.',
       );
     } catch (e) {
       if (mounted) {
         _message(
           _bn
-              ? 'রিমাইন্ডার শিডিউল করা যায়নি।'
+              ? 'রিমাইন্ডার শিডিউল করা যায়নি।'
               : 'Could not schedule reminders.',
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _working = false);
-    }
-  }
-
-  Future<void> _sendTest() async {
-    if (_working) return;
-    setState(() => _working = true);
-
-    try {
-      final permission = await _notifications.requestPermission();
-
-      if (!mounted) return;
-
-      if (permission == false) {
-        _message(
-          _bn
-              ? 'ফোনের Settings থেকে নোটিফিকেশন অনুমতি চালু করুন।'
-              : 'Enable notifications in your phone Settings.',
-        );
-        return;
-      }
-
-      await _notifications.showTestNotification();
-
-      if (mounted) {
-        _message(
-          _bn
-              ? 'টেস্ট নোটিফিকেশন পাঠানো হয়েছে।'
-              : 'Test notification sent.',
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        _message(
-          _bn
-              ? 'টেস্ট নোটিফিকেশন পাঠানো যায়নি।'
-              : 'Could not send test notification.',
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _working = false);
-    }
-  }
-
-  Future<void> _scheduleTest() async {
-    if (_working) return;
-    setState(() => _working = true);
-
-    try {
-      final permission = await _notifications.requestPermission();
-
-      if (!mounted) return;
-
-      if (permission == false) {
-        _message(
-          _bn
-              ? 'প্রথমে নোটিফিকেশনের অনুমতি দিন।'
-              : 'Please grant notification permission first.',
-        );
-        return;
-      }
-
-      await _notifications.scheduleNotification(
-        id: 1002,
-        title: _bn ? 'আমার হিসাব — টেস্ট' : 'Amar Hisab — Test',
-        body: _bn
-            ? 'এটি আপনার পরীক্ষামূলক রিমাইন্ডার।'
-            : 'This is your test reminder.',
-        scheduledDate: DateTime.now().add(const Duration(minutes: 2)),
-      );
-
-      if (mounted) {
-        _message(
-          _bn
-              ? '২ মিনিট পরের রিমাইন্ডার সেট হয়েছে।'
-              : 'Reminder scheduled for 2 minutes from now.',
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        _message(
-          _bn
-              ? 'টেস্ট রিমাইন্ডার সেট করা যায়নি।'
-              : 'Could not schedule the test reminder.',
         );
       }
     } finally {
@@ -295,7 +207,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           child: Text(
             '${receivable ? (_bn ? 'পাওনা' : 'Receivable') : (_bn ? 'দেনা' : 'Payable')}'
             ' • ${_bn ? 'শেষ তারিখ' : 'Due'}: ${_formatDate(due)}\n'
-            '${overdue ? (_bn ? 'মেয়াদোত্তীর্ণ' : 'Overdue') : (_bn ? 'আগামী ৭ দিনের মধ্যে' : 'Within 7 days')}',
+            '${overdue ? (_bn ? 'মেয়াদোত্তীর্ণ' : 'Overdue') : (_bn ? 'আগামী ৭ দিনের মধ্যে' : 'Within 7 days')}',
           ),
         ),
         trailing: Text(
@@ -333,7 +245,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         ),
         subtitle: Text(
           '${_bn ? 'কিস্তির তারিখ' : 'Installment date'}: ${_formatDate(due)}\n'
-          '${overdue ? (_bn ? 'মেয়াদোত্তীর্ণ' : 'Overdue') : (_bn ? 'আগামী ৭ দিনের মধ্যে' : 'Within 7 days')}',
+          '${overdue ? (_bn ? 'মেয়াদোত্তীর্ণ' : 'Overdue') : (_bn ? 'আগামী ৭ দিনের মধ্যে' : 'Within 7 days')}',
         ),
         trailing: Text(
           _money(installment),
@@ -411,7 +323,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         const SizedBox(height: 5),
                         Text(
                           _bn
-                              ? 'আগামী ৭ দিনের হিসাব ও মেয়াদোত্তীর্ণ বকেয়া'
+                              ? 'আগামী ৭ দিনের হিসাব ও মেয়াদোত্তীর্ণ বকেয়া'
                               : 'Next 7 days and overdue balances',
                           style: const TextStyle(
                             color: Colors.white70,
@@ -460,7 +372,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               else
                 ...payables.map((loan) => _loanCard(loan, primary)),
               _sectionTitle(
-                _bn ? 'সঞ্চয় ও DPS কিস্তি' : 'Savings and DPS installments',
+                _bn ? 'সঞ্চয় ও DPS কিস্তি' : 'Savings and DPS installments',
                 Icons.savings_rounded,
                 primary,
               ),
@@ -470,35 +382,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ..._dps.map((saving) => _dpsCard(saving, primary)),
             ],
             _sectionTitle(
-              _bn ? 'ফোনের নোটিফিকেশন' : 'Phone notifications',
-              Icons.phone_android_rounded,
+              _bn ? 'নোটিফিকেশন আপডেট' : 'Notification Sync',
+              Icons.sync_rounded,
               primary,
-            ),
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.send_rounded, color: primary),
-                title: Text(_bn ? 'এখনই টেস্ট নোটিফিকেশন' : 'Send test notification'),
-                subtitle: Text(
-                  _bn
-                      ? 'ফোনের নোটিফিকেশন প্যানেলে পরীক্ষা করুন।'
-                      : 'Check whether notifications appear on your phone.',
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _working ? null : _sendTest,
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.alarm_rounded, color: primary),
-                title: Text(_bn ? '২ মিনিটের টেস্ট রিমাইন্ডার' : '2-minute test reminder'),
-                subtitle: Text(
-                  _bn
-                      ? 'অ্যাপ থেকে বের হয়েও পরীক্ষা করতে পারবেন।'
-                      : 'Test after leaving the app.',
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _working ? null : _scheduleTest,
-              ),
             ),
             Card(
               child: ListTile(
@@ -506,7 +392,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 title: Text(_bn ? 'রিমাইন্ডার শিডিউল আপডেট' : 'Update reminder schedule'),
                 subtitle: Text(
                   _bn
-                      ? 'বর্তমান দেনা-পাওনা ও DPS তথ্য থেকে রিমাইন্ডার তৈরি করুন।'
+                      ? 'বর্তমান দেনা-পাওনা ও DPS তথ্য থেকে ফোনে অটোমেটিক রিমাইন্ডার সেট করুন।'
                       : 'Schedule reminders from current loans and DPS data.',
                 ),
                 trailing: const Icon(Icons.chevron_right),
@@ -534,8 +420,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   Expanded(
                     child: Text(
                       _bn
-                          ? 'মেয়াদোত্তীর্ণ বকেয়া পরিশোধ না হওয়া পর্যন্ত তালিকায় থাকবে। ফোনে নোটিফিকেশন পেতে অনুমতি চালু রাখুন। সময়মতো নতুন রিমাইন্ডার শিডিউল করতে Refresh/Sync চাপুন।'
-                          : 'Overdue balances remain listed until paid. Keep notification permission enabled and use Refresh/Sync to update scheduled reminders.',
+                          ? 'মেয়াদোত্তীর্ণ বকেয়া পরিশোধ না হওয়া পর্যন্ত তালিকায় থাকবে। সময়মতো নতুন রিমাইন্ডার পেতে Refresh/Sync চাপুন।'
+                          : 'Overdue balances remain listed until paid. Use Refresh/Sync to update scheduled reminders.',
                       style: TextStyle(color: textColor, height: 1.5),
                     ),
                   ),
