@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../services/backup_service.dart';
@@ -15,7 +14,6 @@ class _BackupScreenState extends State<BackupScreen> {
 
   bool _loading = false;
   bool _autoBackup = true;
-  bool _hasFolder = false;
   DateTime? _lastBackup;
 
   @override
@@ -26,14 +24,12 @@ class _BackupScreenState extends State<BackupScreen> {
 
   Future<void> _loadStatus() async {
     final enabled = await _backup.isAutoBackupEnabled();
-    final folder = await _backup.hasBackupFolder();
     final last = await _backup.getLastBackupDate();
 
     if (!mounted) return;
 
     setState(() {
       _autoBackup = enabled;
-      _hasFolder = folder;
       _lastBackup = last;
     });
   }
@@ -67,28 +63,16 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
-  Future<void> _chooseFolder() async {
-    await _runTask(() async {
-      final selected = await _backup.chooseBackupFolder();
-
-      if (selected) {
-        _showMessage('ব্যাকআপ ফোল্ডার নির্বাচন করা হয়েছে।');
-      } else {
-        _showMessage('ফোল্ডার নির্বাচন বাতিল করা হয়েছে।');
-      }
-    });
-  }
-
   Future<void> _createBackup() async {
     await _runTask(() async {
       final path = await _backup.exportBackupFile();
 
       if (path == null) {
-        _showMessage('ব্যাকআপ সংরক্ষণ বাতিল করা হয়েছে।');
+        _showMessage('ব্যাকআপ সংরক্ষণ বাতিল করা হয়েছে।');
         return;
       }
 
-      _showMessage('ব্যাকআপ ফাইল সংরক্ষণের অনুরোধ সম্পন্ন হয়েছে।');
+      _showMessage('ব্যাকআপ ফাইল সংরক্ষণের অনুরোধ সম্পন্ন হয়েছে।');
     });
   }
 
@@ -99,9 +83,9 @@ class _BackupScreenState extends State<BackupScreen> {
         title: const Text('ব্যাকআপ Restore করবেন?'),
         content: const Text(
           'Restore করলে বর্তমান হিসাবের তথ্য নির্বাচিত '
-          'ব্যাকআপের তথ্য দিয়ে প্রতিস্থাপিত হবে। '
+          'ব্যাকআপের তথ্য দিয়ে প্রতিস্থাপিত হবে। '
           'আগে বর্তমান হিসাবের একটি নিরাপদ কপি সংরক্ষণ করতে হবে। '
-          'আপনি কি এগিয়ে যেতে চান?',
+          'আপনি কি এগিয়ে যেতে চান?',
         ),
         actions: [
           TextButton(
@@ -110,7 +94,7 @@ class _BackupScreenState extends State<BackupScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('এগিয়ে যান'),
+            child: const Text('এগিয়ে যান'),
           ),
         ],
       ),
@@ -125,7 +109,7 @@ class _BackupScreenState extends State<BackupScreen> {
 
       if (safetyPath == null) {
         _showMessage(
-          'নিরাপদ ব্যাকআপ সংরক্ষণ করা হয়নি। Restore বাতিল।',
+          'নিরাপদ ব্যাকআপ সংরক্ষণ করা হয়নি। Restore বাতিল।',
         );
         return;
       }
@@ -133,7 +117,7 @@ class _BackupScreenState extends State<BackupScreen> {
       await _backup.restoreFromFile();
 
       _showMessage(
-        'Restore সম্পন্ন হয়েছে। পরিবর্তন দেখতে অ্যাপ পুনরায় খুলুন।',
+        'Restore সম্পন্ন হয়েছে। পরিবর্তন দেখতে অ্যাপ পুনরায় খুলুন।',
       );
     });
   }
@@ -146,11 +130,11 @@ class _BackupScreenState extends State<BackupScreen> {
 
       if (value) {
         _showMessage(
-          'সাপ্তাহিক ব্যাকআপ চালু হয়েছে। '
-          'স্বয়ংক্রিয় কাজের সময়সূচি এখনো যুক্ত করতে হবে।',
+          'সাপ্তাহিক ব্যাকআপ চালু হয়েছে। '
+          'স্বয়ংক্রিয় কাজের সময়সূচি এখনো যুক্ত করতে হবে।',
         );
       } else {
-        _showMessage('সাপ্তাহিক ব্যাকআপ বন্ধ হয়েছে।');
+        _showMessage('সাপ্তাহিক ব্যাকআপ বন্ধ হয়েছে।');
       }
     } catch (e) {
       if (!mounted) return;
@@ -203,9 +187,9 @@ class _BackupScreenState extends State<BackupScreen> {
                       const SizedBox(height: 8),
                       const Text(
                         'তোমার হিসাবের তথ্য JSON ফাইলে সংরক্ষণ '
-                        'করো। ফোন পরিবর্তন বা অ্যাপ পুনরায় '
+                        'করো। ফোন পরিবর্তন বা অ্যাপ পুনরায় '
                         'ইনস্টল করার পর এই ফাইল থেকে তথ্য '
-                        'ফিরিয়ে আনা যাবে।',
+                        'ফিরিয়ে আনা যাবে।',
                       ),
                     ],
                   ),
@@ -215,18 +199,6 @@ class _BackupScreenState extends State<BackupScreen> {
               Card(
                 child: Column(
                   children: [
-                    ListTile(
-                      leading: const Icon(Icons.folder_open_rounded),
-                      title: const Text('ব্যাকআপ ফোল্ডার নির্বাচন'),
-                      subtitle: Text(
-                        _hasFolder
-                            ? 'ফোল্ডার নির্বাচন করা হয়েছে'
-                            : 'ফোনে ব্যাকআপ রাখার ফোল্ডার নির্বাচন করো',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: _loading ? null : _chooseFolder,
-                    ),
-                    const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.save_alt_rounded),
                       title: const Text('নতুন ব্যাকআপ তৈরি'),
@@ -292,7 +264,7 @@ class _BackupScreenState extends State<BackupScreen> {
                           'প্রতিস্থাপিত হবে। নিরাপদ কপি রাখবে। '
                           'সাপ্তাহিক ব্যাকগ্রাউন্ড ব্যাকআপের '
                           'জন্য অতিরিক্ত Android scheduling '
-                          'কোড প্রয়োজন।',
+                          'কোড প্রয়োজন।',
                         ),
                       ),
                     ],
