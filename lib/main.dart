@@ -1,4 +1,4 @@
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'screens/home_screen.dart';
@@ -8,18 +8,32 @@ import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
+  // নিশ্চিত করুন Flutter Binding আগে ইনিশিয়ালাইজ হয়েছে
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize the existing database without deleting user data.
-  await MoneyDb.instance.init();
+  // Async ইনিশিয়ালাইজেশন সুরক্ষিত করার জন্য try-catch ব্লক
+  try {
+    // 1. Initialize DB
+    await MoneyDb.instance.init();
+  } catch (e) {
+    debugPrint('Database init failed: $e');
+  }
 
-  // Initialize saved language and theme settings.
-  await AppSettings.instance.init();
+  try {
+    // 2. Initialize Settings
+    await AppSettings.instance.init();
+  } catch (e) {
+    debugPrint('AppSettings init failed: $e');
+  }
 
-  // Initialize notifications and request permission.
-  await NotificationService.instance.init();
-  await NotificationService.instance.requestPermission();
-  await NotificationService.instance.syncFinancialReminders();
+  try {
+    // 3. Initialize Notifications safely
+    await NotificationService.instance.init();
+    await NotificationService.instance.requestPermission();
+    await NotificationService.instance.syncFinancialReminders();
+  } catch (e) {
+    debugPrint('NotificationService init failed: $e');
+  }
 
   runApp(const AmarHisabApp());
 }
@@ -59,8 +73,7 @@ class _AmarHisabAppState extends State<AmarHisabApp> {
       title: settings.t('appName'),
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      themeMode:
-          settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: const HomeScreen(),
     );
   }
