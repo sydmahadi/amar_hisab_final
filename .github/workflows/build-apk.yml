@@ -1,4 +1,3 @@
-
 name: Build Amar Hisab APK
 
 on:
@@ -210,6 +209,53 @@ jobs:
           print(content)
           PY
 
+      - name: Force compileSdk 36 for subprojects (Fix gallery_saver_plus)
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          candidates = [
+              Path("android/build.gradle.kts"),
+              Path("android/build.gradle"),
+          ]
+
+          root_gradle = next((p for p in candidates if p.exists()), None)
+
+          if root_gradle is None:
+              raise SystemExit("ERROR: Root build.gradle not found")
+
+          content = root_gradle.read_text()
+          is_kts = root_gradle.name.endswith(".kts")
+
+          if is_kts:
+              subprojects_block = """
+          subprojects {
+              afterEvaluate {
+                  if (project.hasProperty("android")) {
+                      val android = project.extensions.findByName("android") as? com.android.build.gradle.BaseExtension
+                      android?.compileSdkVersion(36)
+                  }
+              }
+          }
+          """
+          else:
+              subprojects_block = """
+          subprojects {
+              afterEvaluate { project ->
+                  if (project.hasProperty('android')) {
+                      project.android {
+                          compileSdkVersion 36
+                      }
+                  }
+              }
+          }
+          """
+
+          content += f"\n{subprojects_block}\n"
+          root_gradle.write_text(content)
+          print("Subprojects compileSdk override appended to root build.gradle.")
+          PY
+
       - name: Configure Android notification manifest
         run: |
           python3 - <<'PY'
@@ -340,7 +386,7 @@ jobs:
           ls -lh build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        run: uses: actions/upload-artifact@v4
         with:
           name: amar-hisab-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
