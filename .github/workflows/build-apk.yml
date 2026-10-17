@@ -209,7 +209,7 @@ jobs:
           print(content)
           PY
 
-      - name: Force compileSdk 36 for subprojects (Fix gallery_saver_plus)
+      - name: Force compileSdk 36 for subprojects
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -386,7 +386,7 @@ jobs:
           ls -lh build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload APK
-        run: uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: amar-hisab-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
