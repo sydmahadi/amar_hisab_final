@@ -1,4 +1,4 @@
-
+```yaml
 name: Build Amar Hisab APK
 
 on:
@@ -59,13 +59,13 @@ jobs:
           from pathlib import Path
           import re
 
-          settings_candidates = [
+          candidates = [
               Path("android/settings.gradle.kts"),
               Path("android/settings.gradle"),
           ]
 
           settings = next(
-              (p for p in settings_candidates if p.exists()),
+              (p for p in candidates if p.exists()),
               None
           )
 
@@ -136,7 +136,10 @@ jobs:
               Path("android/app/build.gradle"),
           ]
 
-          gradle = next((p for p in candidates if p.exists()), None)
+          gradle = next(
+              (p for p in candidates if p.exists()),
+              None
+          )
 
           if gradle is None:
               raise SystemExit("ERROR: App Gradle file not found")
@@ -153,7 +156,7 @@ jobs:
               )
           else:
               content, count = re.subn(
-                  r'(?m)^(\s*compileSdk\s+).*$',
+                  r'(?m)^(\s*compileSdk(?:Version)?\s+).*$',
                   r'\g<1>36',
                   content,
                   count=1
@@ -219,6 +222,7 @@ jobs:
           manifest = Path(
               "android/app/src/main/AndroidManifest.xml"
           )
+
           content = manifest.read_text()
 
           content, count = re.subn(
@@ -243,6 +247,7 @@ jobs:
                       f'    <uses-permission '
                       f'android:name="{permission}" />\n'
                   )
+
                   content = content.replace(
                       '<application',
                       tag + '\n    <application',
@@ -312,6 +317,75 @@ jobs:
           flutter clean
           flutter pub get
 
+      - name: Fix gallery_saver_plus compileSdk
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          roots = [
+              Path.home() / ".pub-cache/hosted/pub.dev",
+              Path.home() / ".pub-cache/hosted/pub.dartlang.org",
+          ]
+
+          plugin_files = []
+
+          for root in roots:
+              if root.exists():
+                  plugin_files.extend(
+                      root.glob(
+                          "gallery_saver_plus-*/android/build.gradle"
+                      )
+                  )
+                  plugin_files.extend(
+                      root.glob(
+                          "gallery_saver_plus-*/android/build.gradle.kts"
+                      )
+                  )
+
+          if not plugin_files:
+              raise SystemExit(
+                  "ERROR: gallery_saver_plus Gradle file not found"
+              )
+
+          updated = 0
+
+          for path in plugin_files:
+              content = path.read_text()
+              original = content
+
+              # Kotlin DSL: compileSdk = 31
+              content, count_kts = re.subn(
+                  r'(?m)^(\s*compileSdk\s*=\s*)\d+',
+                  r'\g<1>36',
+                  content
+              )
+
+              # Groovy: compileSdk 31 or compileSdkVersion 31
+              content, count_groovy = re.subn(
+                  r'(?m)^(\s*compileSdk(?:Version)?\s+)'
+                  r'\d+',
+                  r'\g<1>36',
+                  content
+              )
+
+              if content != original:
+                  path.write_text(content)
+                  updated += 1
+                  print(f"Updated compileSdk to 36: {path}")
+              else:
+                  print(f"No numeric compileSdk line changed: {path}")
+                  print(content)
+
+          if updated == 0:
+              raise SystemExit(
+                  "ERROR: Could not update gallery_saver_plus compileSdk. "
+                  "Check the plugin Gradle file shown above."
+              )
+
+          print(f"Successfully updated {updated} plugin Gradle file(s).")
+          PY
+
       - name: Verify Gradle version
         run: |
           cd android
@@ -345,3 +419,4 @@ jobs:
           name: amar-hisab-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+```
