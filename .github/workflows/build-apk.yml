@@ -1,3 +1,4 @@
+
 name: Build Amar Hisab APK
 
 on:
@@ -58,13 +59,13 @@ jobs:
           from pathlib import Path
           import re
 
-          settings_candidates = [
+          candidates = [
               Path("android/settings.gradle.kts"),
               Path("android/settings.gradle"),
           ]
 
           settings = next(
-              (p for p in settings_candidates if p.exists()),
+              (p for p in candidates if p.exists()),
               None
           )
 
@@ -90,10 +91,10 @@ jobs:
           )
 
           if agp_count != 1:
-              raise SystemExit("ERROR: Could not configure AGP 8.13.0")
+              raise SystemExit("ERROR: Could not configure AGP")
 
           if kotlin_count != 1:
-              raise SystemExit("ERROR: Could not configure Kotlin 2.2.20")
+              raise SystemExit("ERROR: Could not configure Kotlin")
 
           settings.write_text(content)
 
@@ -105,20 +106,20 @@ jobs:
 
           wrapper_content, count = re.subn(
               r'(?m)^distributionUrl=.*$',
-              'distributionUrl=https\\://services.gradle.org/'
-              'distributions/gradle-8.14.3-bin.zip',
+              lambda m: (
+                  'distributionUrl=https\\://services.gradle.org/'
+                  'distributions/gradle-8.14.3-bin.zip'
+              ),
               wrapper_content,
               count=1
           )
 
           if count != 1:
-              raise SystemExit("ERROR: Could not configure Gradle wrapper")
+              raise SystemExit("ERROR: Could not configure Gradle")
 
           wrapper.write_text(wrapper_content)
 
           print("Android Gradle versions configured.")
-          print(settings.read_text())
-          print(wrapper.read_text())
           PY
 
       - name: Get Flutter dependencies
@@ -135,7 +136,10 @@ jobs:
               Path("android/app/build.gradle"),
           ]
 
-          gradle = next((p for p in candidates if p.exists()), None)
+          gradle = next(
+              (p for p in candidates if p.exists()),
+              None
+          )
 
           if gradle is None:
               raise SystemExit("ERROR: App Gradle file not found")
@@ -152,14 +156,14 @@ jobs:
               )
           else:
               content, count = re.subn(
-                  r'(?m)^(\s*compileSdk\s+).*$',
+                  r'(?m)^(\s*compileSdk(?:Version)?\s+).*$',
                   r'\g<1>36',
                   content,
                   count=1
               )
 
           if count != 1:
-              raise SystemExit("ERROR: Could not configure compileSdk")
+              raise SystemExit("ERROR: Could not configure app compileSdk")
 
           if (
               "isCoreLibraryDesugaringEnabled" not in content
@@ -176,7 +180,7 @@ jobs:
 
               content, count = re.subn(
                   r'compileOptions\s*\{',
-                  replacement,
+                  lambda m: replacement,
                   content,
                   count=1
               )
@@ -205,55 +209,7 @@ jobs:
                   content += '\n\ndependencies {' + dependency + '}\n'
 
           gradle.write_text(content)
-          print("Android app Gradle configured.")
-          print(content)
-          PY
-
-      - name: Force compileSdk 36 for subprojects
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          candidates = [
-              Path("android/build.gradle.kts"),
-              Path("android/build.gradle"),
-          ]
-
-          root_gradle = next((p for p in candidates if p.exists()), None)
-
-          if root_gradle is None:
-              raise SystemExit("ERROR: Root build.gradle not found")
-
-          content = root_gradle.read_text()
-          is_kts = root_gradle.name.endswith(".kts")
-
-          if is_kts:
-              subprojects_block = """
-          subprojects {
-              afterEvaluate {
-                  if (project.hasProperty("android")) {
-                      val android = project.extensions.findByName("android") as? com.android.build.gradle.BaseExtension
-                      android?.compileSdkVersion(36)
-                  }
-              }
-          }
-          """
-          else:
-              subprojects_block = """
-          subprojects {
-              afterEvaluate { project ->
-                  if (project.hasProperty('android')) {
-                      project.android {
-                          compileSdkVersion 36
-                      }
-                  }
-              }
-          }
-          """
-
-          content += f"\n{subprojects_block}\n"
-          root_gradle.write_text(content)
-          print("Subprojects compileSdk override appended to root build.gradle.")
+          print("App compileSdk 36 and desugaring configured.")
           PY
 
       - name: Configure Android notification manifest
@@ -265,6 +221,7 @@ jobs:
           manifest = Path(
               "android/app/src/main/AndroidManifest.xml"
           )
+
           content = manifest.read_text()
 
           content, count = re.subn(
@@ -321,7 +278,6 @@ jobs:
 
           manifest.write_text(content)
           print("Notification manifest configured.")
-          print(content)
           PY
 
       - name: Enable AndroidX
@@ -357,6 +313,53 @@ jobs:
         run: |
           flutter clean
           flutter pub get
+
+      - name: Fix gallery_saver_plus compileSdk
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          cache = Path.home() / ".pub-cache" / "hosted" / "pub.dev"
+
+          files = list(
+              cache.glob("gallery_saver_plus-*/android/build.gradle")
+          ) + list(
+              cache.glob("gallery_saver_plus-*/android/build.gradle.kts")
+          )
+
+          if not files:
+              raise SystemExit(
+                  "ERROR: gallery_saver_plus Android Gradle file not found"
+              )
+
+          for gradle in files:
+              content = gradle.read_text()
+
+              pattern = (
+                  r'(?m)^(\s*compileSdk(?:Version)?\s*'
+                  r'(?:=\s*)?).*$'
+              )
+
+              updated, count = re.subn(
+                  pattern,
+                  lambda m: m.group(1) + "36",
+                  content
+              )
+
+              if count == 0:
+                  raise SystemExit(
+                      f"ERROR: compileSdk setting not found in {gradle}"
+                  )
+
+              gradle.write_text(updated)
+
+              print(f"Updated compileSdk to 36: {gradle}")
+
+              for line in updated.splitlines():
+                  if re.search(r'\bcompileSdk(?:Version)?\b', line):
+                      print(line.strip())
+          PY
 
       - name: Verify Gradle version
         run: |
