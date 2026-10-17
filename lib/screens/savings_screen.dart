@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/money_db.dart';
+import '../services/app_settings.dart';
 
 class SavingsScreen extends StatefulWidget {
   const SavingsScreen({super.key});
@@ -24,8 +25,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
   List<Map<String, dynamic>> _savings = [];
   List<Map<String, dynamic>> _accounts = [];
 
-  bool get _bn =>
-      Localizations.localeOf(context).languageCode.toLowerCase() == 'bn';
+  bool get _bn => AppSettings.instance.isBangla;
 
   String _t(String bn, String en) => _bn ? bn : en;
 
@@ -55,10 +55,23 @@ class _SavingsScreenState extends State<SavingsScreen> {
       sha256.convert(value.trim().codeUnits).toString();
 
   @override
-  void initState() {
-    super.initState();
-    _start();
+void initState() {
+  super.initState();
+  AppSettings.instance.addListener(_onLanguageChanged);
+  _start();
+}
+
+void _onLanguageChanged() {
+  if (mounted) {
+    setState(() {});
   }
+}
+
+@override
+void dispose() {
+  AppSettings.instance.removeListener(_onLanguageChanged);
+  super.dispose();
+}
 
   Future<void> _start() async {
     try {
